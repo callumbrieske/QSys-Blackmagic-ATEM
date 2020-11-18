@@ -1,0 +1,482 @@
+PluginVersion = "0.1 Alpha"
+BGColor = { 55, 55, 55 }
+HeadingColor = { 255, 255, 255 }
+GroupColor = { 153, 153, 153 }
+DarkBox = { 41, 41, 41 }
+ButtonColor = { 204, 204, 204 }
+ButtonBorder = { 105, 105, 105 }
+Black = { 0, 0, 0 }
+White = { 255, 255, 255 }
+PluginInfo =
+{
+	Name = "Blackmagic~ATEM Control",
+	Version = PluginVersion,
+	Id = "a4b3c9d6-4547-4577-931c-a3213c5b3e90",
+	Description = "Blackmagic ATEM Control",
+	ShowDebug = true,
+}
+
+function GetColor(props)
+  return { 0, 0, 0 }
+end
+
+function GetPrettyName(props)
+	return "Blackmagic\nATEM\nControl\nv"..PluginVersion
+end
+
+function GetProperties()
+  props = {}
+  return props
+end
+
+function GetPages()
+  pages = {
+    { name = "Main" },
+    { name = "Aux" },
+    { name = "Setup" },
+  }
+  return pages
+end
+
+function GetControls(props)
+	ctrl = {}
+
+	local function meButton( name, count )
+		table.insert(ctrl,
+			{
+				Name = name,
+				ControlType = "Button",
+				ButtonType = "Toggle",
+				Count = count,
+				UserPin = true,
+				PinStyle = "Both",
+			}
+		)
+	end
+
+
+
+	meButton( "ME1Program", 29 )
+	meButton( "ME1Preview", 29 )
+	meButton( "ME1Trans", 18 )
+	meButton( "ME2Program", 27 )
+	meButton( "ME2Preview", 27 )
+	meButton( "ME2Trans", 18 )
+	meButton( "DSK", 6 )
+
+	table.insert(ctrl,
+		{
+			Name = "MEHandle",
+			ControlType = "Knob",
+			ControlUnit = "Integer",
+			Min = 0,
+			Max = 10000,
+			Count = 2,
+			UserPin = true,
+			PinStyle = "Both",
+		}
+	)
+
+	table.insert(ctrl,
+		{
+			Name = "MEProgressUp",
+			ControlType = "Indicator",
+			ControlUnit = "Integer",
+			IndicatorType = "Meter",
+			Count = 2,
+			UserPin = false,
+		}
+	)
+
+	table.insert(ctrl,
+		{
+			Name = "MEProgressDn",
+			ControlType = "Indicator",
+			ControlUnit = "Integer",
+			IndicatorType = "Meter",
+			Count = 2,
+			UserPin = false,
+		}
+	)
+
+	table.insert(ctrl,
+		{
+			Name = "Rate",
+			ControlType = "Knob",
+			ControlUnit = "Seconds",
+			Min = 0,
+			Max = 600,
+			Count = 6,
+			UserPin = true,
+		}
+	)
+
+	table.insert(ctrl,	-- Code pin for dev
+		{
+			Name = "code",
+			ControlType = "Text",
+			Count = 1,
+			UserPin = false,
+			PinStyle = "Input",
+		}
+	)
+
+	return ctrl
+end
+
+function GetControlLayout(props)
+	layout = {}
+	graphics = {}
+	local offset = 122
+
+	local function Label( fontsize, color, size, position, text, align )	-- Insert Text Label
+		table.insert( graphics,
+			{
+				Type = "Label",
+				Font = "Montserrat", FontStyle="Regular",
+				FontSize = fontsize,
+				Color = color,
+				HTextAlign = (align and align or "Left"),
+				VTextAlign = "Center",
+				Position = position,
+				Size = size,
+				Text = text,
+			}
+		)
+	end
+	local function Box( text, strokew, strokec, radius, fill, size, position )	-- Insert GroupBox
+		table.insert( graphics,
+			{
+				Type = "GroupBox",
+				Text = text,
+				StrokeWidth = strokew,
+				StrokeColor = strokec,
+				CornerRadius = radius,
+				Fill = fill,
+				Position = position,
+				Size = size,
+			}
+		)
+	end
+	local function Titlebar()
+		table.insert( graphics,
+			{
+				Type = "Image",
+				Size = { 1220, 80 },
+				Position = { 0, 0 },
+				Image = "iVBORw0KGgoAAAANSUhEUgAAAAYAAAEwCAAAAACx81+QAAAASElEQVRIx2M0YGBgYGBgYmBgYGBgYPkPoVgh1FtkHlQJyRTLPwjFSJEptKAGk8tGQ2k0/kZDadRlo/E3GkqDz2WwdgE3AyEAAMqDE77AfgfuAAAAAElFTkSuQmCC",
+			}
+		)
+		table.insert( graphics,
+			{
+				Type = "Label",
+				Font = "Montserrat", FontStyle="Light",
+				FontSize = 30,
+				Color = White,
+				HTextAlign = "Left",
+				VTextAlign = "Center",
+				Position = { 30, 0 },
+				Size = { 300, 80 },
+				Text = "ATEM Q-Sys Control",
+			}
+		)
+		return 80
+	end
+	local function HBar( size, position )
+		table.insert( graphics,
+			{
+				Type = "Image",
+				Size = size,
+				Position = position,
+				Image = "iVBORw0KGgoAAAANSUhEUgAAAAYAAAAMCAMAAAB2iTwcAAAACVBMVEUAAAAAAAAwMDBelwoPAAAAAXRSTlMAQObYZgAAABNJREFUeAFjIAIwggEDExgQoR4AAzMAEy3n3ZcAAAAASUVORK5CYII=",
+			}
+		)
+	end
+	local function meButton( name, prettyname, legend, color, offcolor, strokecolor, position )
+		layout[name] =
+		{
+			PrettyName = prettyname,
+			Style = "Button",
+			ButtonStyle = "Toggle",
+			Color = color,
+			UnlinkOffColor = true,
+			OffColor = offcolor,
+			StrokeColor = strokecolor,
+			StrokeWidth = 1,
+			FontSize = 9,
+			Font = "Montserrat", FontStyle="Bold",
+			Legend = ""..legend,
+			Margin = 2,
+			CornerRadius = 2,
+			Position = position,
+			Size = { 40, 40 },
+		}
+	end
+	local function Rate( name, prettyname, position )
+		layout[name] =
+		{
+			PrettyName = prettyname,
+			Style = "Text",
+			TextBoxStyle = "Meter",
+			Color = Black,
+			BackgroundColor = Black,
+			StrokeColor = Black,
+			StrokeWidth = 0,
+			FontSize = 10,
+			Font = "Montserrat", FontStyle="Regular",
+			HTextAlign = "Right",
+			Margin = 2,
+			Radius = 2,
+			CornerRadius = 2,
+			Padding = 1,
+			Position = position,
+			Size = { 40, 24 },
+		}
+	end
+
+	local function buildME( me, top )	-- Build all controls for specified ME
+		local labels =
+				{
+					"MP1",
+					"MP2",
+					"SSrc",
+					"Bars",
+					"Col1",
+					"Col2",
+					( me == 1 and "Pgm2" or ""),
+					( me == 1 and "Prv2" or ""),
+					"ON AIR\n1",
+					"ON AIR\n2",
+					"ON AIR\n3",
+					"ON AIR\n4",
+					"BKGD",
+					"KEY\n1",
+					"KEY\n2",
+					"KEY\n3",
+					"KEY\n4",
+					"MIX",
+					"DIP",
+					"WIPE",
+					"STING",
+					"DVE",
+					"PREV\nTRANS",
+					"CUT",
+					"AUTO",
+					"FTB",
+				}
+		Box( "", 1, Black, 8, DarkBox, { 640, 100 }, { 50, top + 50 } )	-- Program Box
+		Box( "", 1, Black, 8, DarkBox, { 220, 100 }, { 710, top + 50 } )	-- Transition Box
+		Box( "", 1, Black, 8, DarkBox, { 640, 100 }, { 50, top + 216 } )	-- Preview Box
+		Box( "", 1, Black, 8, DarkBox, { 220, 100 }, { 710, top + 216 } )	-- Take Box
+		Box( "", 1, Black, 8, DarkBox, { 100, 266 }, { 950, top + 50 } )	-- Transition Handle Box
+		Box( "", 1, Black, 8, DarkBox, { 100, 60 }, { 1070, top + 256 } )	-- FTB Box
+		if me == 1 then
+			Box( "", 1, Black, 8, DarkBox, { 100, 180 }, { 1070, top + 50 } )	-- DSK Box
+			Label( 12, GroupColor, { 40, 20 }, { 1080, top + 28 }, "DSK 1" ,"Center" )
+			Label( 12, GroupColor, { 40, 20 }, { 1120, top + 28 }, "DSK 2" ,"Center" )
+			meButton( "DSK "..1, "DSK 1~TIE", "TIE", ButtonColor, ButtonColor, ButtonBorder, { 1080, top + 60 })
+			meButton( "DSK "..2, "DSK 1~ON AIR", "ON\nAIR", ButtonColor, ButtonColor, ButtonBorder, { 1080, top + 100 })
+			meButton( "DSK "..3, "DSK 1~AUTO", "AUTO", ButtonColor, ButtonColor, ButtonBorder, { 1080, top + 180 })
+			meButton( "DSK "..4, "DSK 2~TIE", "TIE", ButtonColor, ButtonColor, ButtonBorder, { 1120, top + 60 })
+			meButton( "DSK "..5, "DSK 2~ON AIR", "ON\nAIR", ButtonColor, ButtonColor, ButtonBorder, { 1120, top + 100 })
+			meButton( "DSK "..6, "DSK 2~AUTO", "AUTO", ButtonColor, ButtonColor, ButtonBorder, { 1120, top + 180 })
+			Label( 12, GroupColor, { 40, 16 }, { 1080, top + 140 }, "Rate" ,"Center" )
+			Rate( "Rate 5", "Blah", { 1080, top + 156 } )
+			Label( 12, GroupColor, { 40, 16 }, { 1120, top + 140 }, "Rate" ,"Center" )
+			Rate( "Rate 6", "Blah", { 1120, top + 156 } )
+		end
+		Label( 12, HeadingColor, { 150, 20 }, { 50, top + 8 }, "Mix Effects "..me )
+		Label( 12, GroupColor, { 150, 20 }, { 50, top + 28 }, "Program" )
+		Label( 12, GroupColor, { 150, 20 }, { 710, top + 28 }, "Next Transition" )
+		Label( 12, GroupColor, { 150, 20 }, { 50, top + 194 }, "Preview" )
+		Label( 12, GroupColor, { 150, 20 }, { 710, top + 194 }, "Transition Style" )
+		Label( 12, GroupColor, { 100, 20 }, { 1070, top + 234 }, "Fade to Black" ,"Center" )
+		Label( 12, GroupColor, { 40, 16 }, { 880, top + 266 }, "Rate" ,"Center" )
+		Rate( "Rate "..(me == 1 and 1 or 3), "Blah", { 880, top + 282 } )
+		Label( 12, GroupColor, { 40, 16 }, { 1080, top + 266 }, "Rate" ,"Center" )
+		Rate( "Rate "..(me == 1 and 2 or 4), "Blah", { 1080, top + 282 } )
+
+		for i=1, 10, 1 do	-- Main Source Buttons
+			meButton( "ME"..me.."Program "..i, "ME "..me.."~Program~"..i, i, ButtonColor, ButtonColor, ButtonBorder, { 60+((i-1)*40), 60 + offset })
+			meButton( "ME"..me.."Program "..i+10, "ME "..me.."~Program~"..i+10, i+10, ButtonColor, ButtonColor, ButtonBorder, { 60+((i-1)*40), 100 + offset })
+			meButton( "ME"..me.."Preview "..i, "ME "..me.."~Preview~"..i, i, ButtonColor, ButtonColor, ButtonBorder, { 60+((i-1)*40), 226 + offset })
+			meButton( "ME"..me.."Preview "..i+10, "ME "..me.."~Preview~"..i+10, i+10, ButtonColor, ButtonColor, ButtonBorder, { 60+((i-1)*40), 266 + offset })
+		end
+
+		for i=21, 24, 1 do	-- Fixed/Special Source Buttons
+			meButton( "ME"..me.."Program "..i, "ME "..me.."~Program~"..labels[i-20], labels[i-20], ButtonColor, ButtonColor, ButtonBorder, { 480+((i-21)*40), 60 + offset })
+			meButton( "ME"..me.."Preview "..i, "ME "..me.."~Preview~"..labels[i-20], labels[i-20], ButtonColor, ButtonColor, ButtonBorder, { 480+((i-21)*40), 226 + offset })
+			if me == 1 or ( me == 2 and i < 23 ) then
+			meButton( "ME"..me.."Program "..i+5, "ME "..me.."~Program~"..i+5, labels[i-16], ButtonColor, ButtonColor, ButtonBorder, { 480+((i-21)*40), 100 + offset })
+			meButton( "ME"..me.."Preview "..i+5, "ME "..me.."~Preview~"..i+5, labels[i-16], ButtonColor, ButtonColor, ButtonBorder, { 480+((i-21)*40), 266 + offset })
+			end
+		end
+		meButton( "ME"..me.."Program "..25, "ME "..me.."~Program~Blk", "Blk", ButtonColor, ButtonColor, ButtonBorder, { 480+((4)*40), 60 + offset })
+		meButton( "ME"..me.."Preview "..25, "ME "..me.."~Program~Blk", "Blk", ButtonColor, ButtonColor, ButtonBorder, { 480+((4)*40), 226 + offset })
+
+		local col = 1	-- Transition Buttons
+		local row = 0
+		for i=1, 18, 1 do
+			if i > 4 then col = -4 row = 1 end
+			if i > 9 then col = -9 row = 2 end
+			if i > 14 then col = -14 row = 3 end
+			if i > 15 then col = -13 row = 3 end
+			if i > 17 then col = -7 row = 3 end
+			meButton( "ME"..me.."Trans "..i, "ME "..me..(i<10 and "~Next Transition~" or "~Transition Style~")..labels[i+8], labels[i+8], ButtonColor, ButtonColor, ButtonBorder, { 680+( (col + i) * 40), 60 + (row > 1 and 86 or 0) + ( row * 40 ) + offset })
+		end
+
+
+		--[[
+		layout["MEProgressUp "..me] =
+		{
+			Style = "Meter",
+			MeterStyle = "Level",
+			ShowTextbox = false,
+			--Color = "#00FF00",
+			BackgroundColor = DarkBox,
+			StrokeColor = DarkBox,
+			StrokeWidth = 0,
+			Margin = 0,
+			Radius = 0,
+			CornerRadius = 0,
+			Position = { 960, top + 60 },
+			Size = { 8, 210 },
+		}
+		layout["MEProgressDn "..me] =
+		{
+			Style = "Meter",
+			MeterStyle = "Reduction",
+			ShowTextbox = false,
+			--Color = "#FF0000",
+			BackgroundColor = DarkBox,
+			StrokeColor = DarkBox,
+			StrokeWidth = 0,
+			Margin = 0,
+			Radius = 0,
+			CornerRadius = 0,
+			Position = { 960+72 , top + 60 },
+			Size = { 8, 210 },
+		}
+		--]]
+
+		layout["MEHandle "..me] =
+		{
+			PrettyName = "ME "..me.."~T-Bar",
+			Style = "Fader",
+			Color = ButtonColor,
+			StrokeColor = strokecolor,
+			StrokeWidth = 0,
+			Margin = 0,
+			CornerRadius = 0,
+			Position = { 960, top + 60 },
+			Size = { 80, 246 },
+		}
+
+		return top + 336
+	end
+
+
+	local page = props["page_index"].Value	-- Build Pages
+	if page == 1 then
+		Box( "", 0, Black, 0, BGColor, { 1220, 824 }, { 0, 0 } )
+		HBar( { 1120, 12 }, { 50, offset-10 } )
+		offset = buildME( 2, offset )
+		HBar( { 1120, 12 }, { 50, offset-10 } )
+		offset = buildME( 1, offset )
+	elseif page == 2 then
+		Box( "", 0, Black, 0, BGColor, { 1220, 668 }, { 0, 0 } )
+	elseif page == 3 then
+		Box( "", 0, Black, 0, BGColor, { 1220, 280 }, { 0, 0 } )
+	end
+	Titlebar()
+
+	layout["code"] =	-- Code pin for dev
+		{
+			PrettyName = "Code",
+			Style = "Text",
+			TextBoxStyle = "Normal",
+			Size = { 3, 3 },
+			Position = { 0, 0 },
+		}
+
+	return layout, graphics
+end
+
+function GetPins(props)
+	local pins = {}
+	return pins
+end
+
+function GetComponents(props)
+	local Components = {}
+	return Components
+end
+
+
+function GetWiring(props)
+	local wiring = {}
+	return wiring
+end
+
+
+if Controls then
+
+	-- Define friendly control names, and call functions \/\/\/
+
+	function getControl(ctl)
+		for i, c in pairs(vPanel) do
+			if ctl == c then
+				print("The Control is "..i)
+			end
+		end
+	end
+
+	vPanel = {}
+	for i=1, 20, 1 do
+		vPanel["ME1Preview "..i] = Controls.ME1Preview[i]
+		vPanel["ME1Preview "..i].EventHandler = getControl
+		vPanel["ME1Program "..i] = Controls.ME1Program[i]
+		vPanel["ME1Program "..i].EventHandler = getControl
+		vPanel["ME2Preview "..i] = Controls.ME2Preview[i]
+		vPanel["ME2Preview "..i].EventHandler = getControl
+		vPanel["ME2Program "..i] = Controls.ME2Program[i]
+		vPanel["ME2Program "..i].EventHandler = getControl
+	end
+	for i, v in ipairs({"MP1","MP2","SSrc","Bars","Blk","Col1","Col2"}) do
+		vPanel["ME1Preview "..v] = Controls.ME1Preview[i+20]
+		vPanel["ME1Preview "..v].EventHandler = getControl
+		vPanel["ME1Program "..v] = Controls.ME1Program[i+20]
+		vPanel["ME1Program "..v].EventHandler = getControl
+		vPanel["ME2Preview "..v] = Controls.ME2Preview[i+20]
+		vPanel["ME2Preview "..v].EventHandler = getControl
+		vPanel["ME2Program "..v] = Controls.ME2Program[i+20]
+		vPanel["ME2Program "..v].EventHandler = getControl
+	end
+	vPanel["ME1Preview ".."Pgm2"] = Controls.ME1Preview[28]
+	vPanel["ME1Preview ".."Pgm2"].EventHandler = getControl
+	vPanel["ME1Program ".."Pgm2"] = Controls.ME1Program[28]
+	vPanel["ME1Program ".."Pgm2"].EventHandler = getControl
+	vPanel["ME1Preview ".."Prv2"] = Controls.ME1Preview[29]
+	vPanel["ME1Preview ".."Prv2"].EventHandler = getControl
+	vPanel["ME1Program ".."Prv2"] = Controls.ME1Program[29]
+	vPanel["ME1Program ".."Prv2"].EventHandler = getControl
+	for i, v in ipairs({"ON AIR 1", "ON AIR 2", "ON AIR 3", "ON AIR 4", "BKGD", "KEY 1", "KEY 2", "KEY 3", "KEY 4", "MIX", "DIP", "WIPE", "STING", "DVE", "PREV TRANS", "CUT", "AUTO", "FTB"}) do
+		vPanel["ME1Trans "..v] = Controls.ME1Trans[i]
+		vPanel["ME1Trans "..v].EventHandler = getControl
+		vPanel["ME2Trans "..v] = Controls.ME2Trans[i]
+		vPanel["ME2Trans "..v].EventHandler = getControl
+	end
+	for i, v in ipairs({"TIE", "ON AIR", "AUTO", "TIE", "ON AIR", "AUTO"}) do
+		vPanel["DSK "..(i < 4 and "1 " or "2 ")..v] = Controls.DSK[i]
+		vPanel["DSK "..(i < 4 and "1 " or "2 ")..v].EventHandler = getControl
+	end
+	vPanel["ME1Handle"] = Controls.MEHandle[1]
+	vPanel["ME1Handle"].EventHandler = getControl
+	vPanel["ME2Handle"] = Controls.MEHandle[2]
+	vPanel["ME2Handle"].EventHandler = getControl
+
+	-- Define friendly control names, and call functions /\/\/\
+
+	--Controls.code.EventHandler = load(Controls.code.String)	-- Code pin for dev
+
+end
